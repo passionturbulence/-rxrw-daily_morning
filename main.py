@@ -32,7 +32,7 @@ def get_weather(city):
     try:
         # 编码城市名
         encoded_city = quote(city)
-        url = f"https://apis.tianapi.com/tianqi/index?key=1267e3290f4f9c5610f868069394d955&101070201=101020100&type=1={encoded_city}"
+        url = f"https://apis.tianapi.com/tianqi/index?key=1267e3290f4f9c5610f868069394d955&city=101020100&type=1"
         
         # 发送请求
         response = requests.get(url, timeout=5)
