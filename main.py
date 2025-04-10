@@ -37,10 +37,11 @@ def get_weather(city):
             print(f"API错误码：{res.get('code')}, 错误信息：{res.get('msg')}")
             return None, None
             
-        weather_data = res.get('data', {}).get('list', [])
-        if not weather_data:
-            print("错误: 天气数据为空")
-            return None, None
+        # 正确的数据路径
+        weather_info = res.get('result', {})
+        temp_str = weather_info.get('real', '0℃')
+        temp = float(temp_str.replace('℃', '').strip())
+        return weather_info.get('weather'), math.floor(temp)
             
         current_weather = weather_data[0]
         return current_weather.get('weather'), math.floor(current_weather.get('temp'))
