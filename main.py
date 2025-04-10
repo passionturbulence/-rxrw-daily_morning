@@ -37,6 +37,8 @@ def get_weather(city):
         # 发送请求
         response = requests.get(url, timeout=5)
         response.raise_for_status()
+        response = requests.get(api_url)
+        data = response.json()
         
         res = response.json()
         print("编码后的城市名:", encoded_city)
