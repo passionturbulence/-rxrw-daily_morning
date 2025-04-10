@@ -69,7 +69,6 @@ data = {
     "birthday_left": {"value": get_birthday()},
     "words": {"value": get_words(), "color": get_random_color()}
 }
-
 def get_count():
     delta = today - datetime.strptime(start_date, "%Y-%m-%d")
     return delta.days
