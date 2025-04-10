@@ -32,7 +32,7 @@ def get_weather(city):
     try:
         # 编码城市名
         encoded_city = quote(city)
-        url = f"https://apis.tianapi.com/tianqi/index?key=1267e3290f4f9c5610f868069394d955&city=大连&type=1=encoded_city"
+        url = f"https://apis.tianapi.com/tianqi/index?key=1267e3290f4f9c5610f868069394d955&city=101070201&type=1=encoded_city"
         
         # 发送请求
         response = requests.get(url, timeout=5)
@@ -63,7 +63,7 @@ def get_weather(city):
         return None, None
 
 # 测试调用
-weather, temp = get_weather("北京")
+weather, temp = get_weather("大连")
 print(f"天气: {weather}, 温度: {temp}℃")
 def get_count():
   delta = today - datetime.strptime(start_date, "%Y-%m-%d")
