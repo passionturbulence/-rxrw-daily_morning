@@ -22,36 +22,53 @@ template_id = os.environ["TEMPLATE_ID"]
 def get_weather(city):
     try:
         encoded_city = quote(city)
-        # 修正URL使用动态城市参数
         url = f"https://apis.tianapi.com/tianqi/index?key=1267e3290f4f9c5610f868069394d955&city={encoded_city}&type=1"
         
         response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        
         res = response.json()
-        print("编码后的城市名:", encoded_city)
         print("API响应数据:", res)
 
-        # 增强数据校验
         if res.get('code') != 200:
-            print(f"API错误码：{res.get('code')}, 错误信息：{res.get('msg')}")
-            return None, None
+            print(f"API错误：{res.get('msg')}")
+            return None, None, None, None  # 新增两个返回字段
             
-        # 正确的数据路径
         weather_info = res.get('result', {})
+        if not weather_info:
+            print("错误: 天气数据为空")
+            return None, None, None, None
+
+        # 解析四个关键字段
+        weather = weather_info.get('weather')
         temp_str = weather_info.get('real', '0℃')
-        temp = float(temp_str.replace('℃', '').strip())
-        return weather_info.get('weather'), math.floor(temp)
-            
-        current_weather = weather_data[0]
-        return current_weather.get('weather'), math.floor(current_weather.get('temp'))
+        date_str = weather_info.get('date')  # API返回的日期
+        tips = weather_info.get('tips')       # 天气小贴士
         
-    except requests.exceptions.RequestException as e:
-        print(f"网络请求失败: {e}")
-        return None, None
+        # 温度处理（保留一位小数）
+        temp = round(float(temp_str.replace('℃', '').strip()), 1)
+        
+        # 日期处理（如果API日期不存在则使用当天）
+        today_date = datetime.now().strftime("%Y-%m-%d")
+        final_date = date_str if date_str else today_date
+        
+        return weather, temp, final_date, tips
+        
     except Exception as e:
         print(f"解析异常: {str(e)}")
-        return None, None
+        return None, None, None, None
+
+# 调用时接收四个返回值
+wea, temp, date, tips = get_weather(city)
+
+# 构建消息数据（新增两个字段）
+data = {
+    "date": {"value": date or "日期获取失败"},
+    "weather": {"value": wea or "未知"},
+    "temperature": {"value": f"{temp}℃" if temp else "N/A"},
+    "tips": {"value": tips or "今日无特别提示"},  # 新增tips字段
+    "love_days": {"value": get_count()},
+    "birthday_left": {"value": get_birthday()},
+    "words": {"value": get_words(), "color": get_random_color()}
+}
 
 def get_count():
     delta = today - datetime.strptime(start_date, "%Y-%m-%d")
