@@ -18,12 +18,51 @@ user_id = os.environ["USER_ID"]
 template_id = os.environ["TEMPLATE_ID"]
 
 
-def get_weather():
-  url = "https://apis.tianapi.com/tianqi/index" + city
-  res = requests.get(url).json()
-  weather = res['data']['list'][0]
-  return weather['weather'], math.floor(weather['temp'])
+import requests
+import math
+from urllib.parse import quote
+from json import JSONDecodeError
 
+import requests
+import math
+from urllib.parse import quote
+from json import JSONDecodeError
+
+def get_weather(city):
+    try:
+        # 编码城市名
+        encoded_city = quote(city)
+        url = f"http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&city={encoded_city}"
+        
+        # 发送请求
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        
+        res = response.json()
+        print("编码后的城市名:", encoded_city)
+        print("API响应数据:", res)
+        
+        # 检查数据结构
+        if 'data' not in res or 'list' not in res['data'] or len(res['data']['list']) == 0:
+            print("错误: API数据结构异常")
+            return None, None
+            
+        weather = res['data']['list'][0]
+        return weather['weather'], math.floor(weather['temp'])
+        
+    except requests.exceptions.RequestException as e:
+        print(f"网络请求失败: {e}")
+        return None, None
+    except JSONDecodeError:
+        print("错误: API返回的数据不是有效的JSON格式")
+        return None, None
+    except KeyError as e:
+        print(f"错误: 字段缺失 - {e}")
+        return None, None
+
+# 测试调用
+weather, temp = get_weather("北京")
+print(f"天气: {weather}, 温度: {temp}℃")
 def get_count():
   delta = today - datetime.strptime(start_date, "%Y-%m-%d")
   return delta.days
