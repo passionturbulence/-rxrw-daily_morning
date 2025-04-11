@@ -17,14 +17,13 @@ app_id = os.environ["APP_ID"]                  # 微信APP_ID
 app_secret = os.environ["APP_SECRET"]          # 微信APP_SECRET
 user_id = os.environ["USER_ID"]                # 微信用户ID
 template_id = os.environ["TEMPLATE_ID"]        # 消息模板ID
-weather_api_key = os.environ["WEATHER_API_KEY"] # 天行API密钥
 
 # 核心功能函数 ==============================================================
 def get_weather(city):
     """ 获取天气数据 """
     try:
         encoded_city = quote(city)
-        url = f"https://apis.tianapi.com/tianqi/index?key={weather_api_key}&city={encoded_city}&type=1"
+        url = f"https://apis.tianapi.com/tianqi/index?key=1267e3290f4f9c5610f868069394d955&city={encoded_city}&type=1"
         
         response = requests.get(url, timeout=10)
         res = response.json()
