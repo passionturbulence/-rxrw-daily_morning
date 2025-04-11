@@ -1,7 +1,6 @@
 from datetime import datetime, date
 import math
 import os
-import random
 import requests
 from urllib.parse import quote
 from wechatpy import WeChatClient
