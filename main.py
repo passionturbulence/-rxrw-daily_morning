@@ -43,10 +43,17 @@ def get_weather(city):
             print("错误: 天气数据为空")
             return None, None, None, None
 
-        # 解析数据
+        # 解析数据并转换日期格式
         weather = result.get('weather', '未知')
         temp_str = result.get('real', '0℃').replace('℃', '').strip()
-        report_date = result.get('date', datetime.now().strftime("%Y-%m-%d"))
+        raw_date = result.get('date', '')
+        
+        # 转换日期格式
+        try:
+            report_date = datetime.strptime(raw_date, "%Y-%m-%d").strftime("%Y年%m月%d日")
+        except:
+            report_date = datetime.now().strftime("%Y年%m月%d日")
+            
         tips = result.get('tips', '今日无特别提示')
         
         try:
@@ -98,14 +105,14 @@ def get_random_color():
 # 主程序 ====================================================================
 if __name__ == "__main__":
     # 获取所有数据
-    weather, temp, date, tips = get_weather(city)
+    weather, temp, report_date, tips = get_weather(city)
     days_count = get_days_count()
     birthday_left = get_birthday_left()
     inspiration = get_inspiration()
     
     # 构建消息数据（带容错处理）
     data = {
-        "date": {"value": date or datetime.now().strftime("%Y-%m-%d")},
+        "date": {"value": report_date or datetime.now().strftime("%Y年%m月%d日")},
         "weather": {"value": weather or "未知"},
         "temperature": {"value": f"{temp}℃" if temp else "N/A"},
         "tips": {"value": tips or "今日无特别提示"},
