@@ -44,6 +44,17 @@ if second_date == '2022-01-01':
     print("    3. 环境变量设置后没有重启应用")
 else:
     print(f"✓ SECOND_DATE 使用的是您设置的值: {second_date}")
+    jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send WeChat Message
+        env:
+          START_DATE: ${{ secrets.START_DATE }}
+          SECOND_DATE: ${{ secrets.SECOND_DATE }}   # 确保这一行存在
+          # ... 其他环境变量
+        run: |
+          python main.py
 
 # 核心功能函数 ==============================================================
 def get_weather(city):
