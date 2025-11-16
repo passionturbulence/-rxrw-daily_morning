@@ -21,17 +21,29 @@ app_secret = os.environ.get("APP_SECRET", "")                    # 微信APP_SEC
 user_id = os.environ.get("USER_ID", "")                          # 微信用户ID
 template_id = os.environ.get("TEMPLATE_ID", "")                  # 消息模板ID
 
-# 调试信息输出
-print("\n=== 环境变量检查 ===")
-print(f"START_DATE: {start_date}")
-print(f"SECOND_DATE: {second_date}")
+# 详细的调试信息输出
+print("\n=== 环境变量详细检查 ===")
+print(f"所有环境变量: {dict(os.environ)}")  # 打印所有环境变量
+print("\n关键环境变量:")
+print(f"START_DATE: {start_date} (类型: {type(start_date)})")
+print(f"SECOND_DATE: {second_date} (类型: {type(second_date)})")
 print(f"CITY: {city}")
 print(f"BIRTHDAY: {birthday}")
-print(f"APP_ID: {app_id[:5]}...{app_id[-3:] if app_id and len(app_id) > 8 else '***'}")
-print(f"APP_SECRET: {app_secret[:3]}...{app_secret[-3:] if app_secret and len(app_secret) > 6 else '***'}")
+print(f"APP_ID: {app_id}")
+print(f"APP_SECRET: {app_secret}")
 print(f"USER_ID: {user_id}")
 print(f"TEMPLATE_ID: {template_id}")
 print("===================\n")
+
+# 检查SECOND_DATE是否使用了默认值
+if second_date == '2022-01-01':
+    print("!!! 警告: SECOND_DATE 使用的是默认值，不是您设置的实际值")
+    print("!!! 可能的原因:")
+    print("    1. 环境变量名称不正确")
+    print("    2. 环境变量没有正确设置")
+    print("    3. 环境变量设置后没有重启应用")
+else:
+    print(f"✓ SECOND_DATE 使用的是您设置的值: {second_date}")
 
 # 核心功能函数 ==============================================================
 def get_weather(city):
@@ -82,14 +94,14 @@ def get_weather(city):
         print(f"天气接口异常: {str(e)}")
         return None, None, None, None
 
-def get_days_count(start_date):
+def get_days_count(date_str, date_name="纪念日"):
     """ 计算纪念日天数 """
     try:
-        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
-        delta = today - start_date_obj
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        delta = today - date_obj
         return delta.days
     except Exception as e:
-        print(f"纪念日计算错误: {str(e)}")
+        print(f"{date_name}计算错误: {str(e)}")
         return "N/A"
 
 def get_birthday_left():
@@ -121,8 +133,8 @@ def get_random_color():
 if __name__ == "__main__":
     # 获取所有数据
     weather, temp, report_date, tips = get_weather(city)
-    days_count = get_days_count(start_date)
-    second_days_count = get_days_count(second_date)  # 使用相同的函数计算第二个纪念日
+    days_count = get_days_count(start_date, "第一个纪念日")
+    second_days_count = get_days_count(second_date, "第二个纪念日")
     birthday_left = get_birthday_left()
     inspiration = get_inspiration()
     
