@@ -10,6 +10,54 @@ from wechatpy.client.api import WeChatMessage, WeChatTemplate
 # 环境变量配置 ==============================================================
 today = datetime.now()
 
+print("\n" + "="*60)
+print("GitHub Actions 环境变量诊断")
+print("="*60)
+
+# 列出所有环境变量（过滤掉不相关的）
+relevant_env_vars = {}
+for key, value in os.environ.items():
+    if any(secret in key for secret in ['START', 'SECOND', 'CITY', 'BIRTHDAY', 'APP', 'USER', 'TEMPLATE']):
+        relevant_env_vars[key] = value
+
+print("相关的环境变量:")
+for key, value in relevant_env_vars.items():
+    print(f"  {key}: {value}")
+
+# 检查 SECOND_DATE
+if 'SECOND_DATE' not in os.environ:
+    print("\n❌ 诊断结果: SECOND_DATE 环境变量不存在")
+    print("\n可能的原因和解决方案:")
+    print("1. GitHub Secrets 中没有设置 SECOND_DATE")
+    print("   - 进入仓库 Settings > Secrets and variables > Actions")
+    print("   - 点击 New repository secret")
+    print("   - 名称: SECOND_DATE, 值: 你的纪念日(YYYY-MM-DD)")
+    print("")
+    print("2. 工作流文件中没有传递 SECOND_DATE")
+    print("   - 检查 .github/workflows/*.yml 文件")
+    print("   - 确保有: SECOND_DATE: ${{ secrets.SECOND_DATE }}")
+    print("")
+    print("3. Secret 名称拼写错误")
+    print("   - 确保是 SECOND_DATE 不是 Second_Date 或 second_date")
+    exit(1)
+else:
+    second_date = os.environ['SECOND_DATE']
+    print(f"\n✅ SECOND_DATE 环境变量存在: {second_date}")
+
+# 获取其他环境变量
+start_date = os.environ['START_DATE']
+city = os.environ['CITY']
+birthday = os.environ['BIRTHDAY']
+app_id = os.environ["APP_ID"]
+app_secret = os.environ["APP_SECRET"]
+user_id = os.environ["USER_ID"]
+template_id = os.environ["TEMPLATE_ID"]
+
+print("="*60 + "\n")
+
+# 环境变量配置 ==============================================================
+today = datetime.now()
+
 # 安全获取环境变量，提供默认值
 start_date = os.environ.get('START_DATE', '2020-01-01')          # 第一个纪念日
 second_date = os.environ.get('SECOND_DATE', '2022-01-01')        # 第二个纪念日，如果未设置则使用默认值
