@@ -9,15 +9,29 @@ from wechatpy.client.api import WeChatMessage, WeChatTemplate
 
 # 环境变量配置 ==============================================================
 today = datetime.now()
-start_date = os.environ['START_DATE']          # 第一个纪念日，格式：2020-01-01
-second_date = os.environ['SECOND_DATE']        # 第二个纪念日，格式：2020-01-01
-city = os.environ['CITY']                      # 查询城市，如：北京
-birthday = os.environ['BIRTHDAY']              # 生日，格式：01-01
 
-app_id = os.environ["APP_ID"]                  # 微信APP_ID
-app_secret = os.environ["APP_SECRET"]          # 微信APP_SECRET
-user_id = os.environ["USER_ID"]                # 微信用户ID
-template_id = os.environ["TEMPLATE_ID"]        # 消息模板ID
+# 安全获取环境变量，提供默认值
+start_date = os.environ.get('START_DATE', '2020-01-01')          # 第一个纪念日
+second_date = os.environ.get('SECOND_DATE', '2022-01-01')        # 第二个纪念日，如果未设置则使用默认值
+city = os.environ.get('CITY', '北京')                            # 查询城市
+birthday = os.environ.get('BIRTHDAY', '01-01')                   # 生日
+
+app_id = os.environ.get("APP_ID", "")                            # 微信APP_ID
+app_secret = os.environ.get("APP_SECRET", "")                    # 微信APP_SECRET
+user_id = os.environ.get("USER_ID", "")                          # 微信用户ID
+template_id = os.environ.get("TEMPLATE_ID", "")                  # 消息模板ID
+
+# 调试信息输出
+print("\n=== 环境变量检查 ===")
+print(f"START_DATE: {start_date}")
+print(f"SECOND_DATE: {second_date}")
+print(f"CITY: {city}")
+print(f"BIRTHDAY: {birthday}")
+print(f"APP_ID: {app_id[:5]}...{app_id[-3:] if app_id and len(app_id) > 8 else '***'}")
+print(f"APP_SECRET: {app_secret[:3]}...{app_secret[-3:] if app_secret and len(app_secret) > 6 else '***'}")
+print(f"USER_ID: {user_id}")
+print(f"TEMPLATE_ID: {template_id}")
+print("===================\n")
 
 # 核心功能函数 ==============================================================
 def get_weather(city):
@@ -68,24 +82,14 @@ def get_weather(city):
         print(f"天气接口异常: {str(e)}")
         return None, None, None, None
 
-def get_days_count():
-    """ 计算第一个纪念日天数 """
+def get_days_count(start_date):
+    """ 计算纪念日天数 """
     try:
         start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
         delta = today - start_date_obj
         return delta.days
     except Exception as e:
-        print(f"第一个纪念日计算错误: {str(e)}")
-        return "N/A"
-
-def get_second_days_count():
-    """ 计算第二个纪念日天数 """
-    try:
-        second_date_obj = datetime.strptime(second_date, "%Y-%m-%d")
-        delta = today - second_date_obj
-        return delta.days
-    except Exception as e:
-        print(f"第二个纪念日计算错误: {str(e)}")
+        print(f"纪念日计算错误: {str(e)}")
         return "N/A"
 
 def get_birthday_left():
@@ -117,8 +121,8 @@ def get_random_color():
 if __name__ == "__main__":
     # 获取所有数据
     weather, temp, report_date, tips = get_weather(city)
-    days_count = get_days_count()
-    second_days_count = get_second_days_count()  # 新增第二个纪念日
+    days_count = get_days_count(start_date)
+    second_days_count = get_days_count(second_date)  # 使用相同的函数计算第二个纪念日
     birthday_left = get_birthday_left()
     inspiration = get_inspiration()
     
@@ -129,23 +133,47 @@ if __name__ == "__main__":
         "temperature": {"value": f"{temp}℃" if temp else "N/A"},
         "tips": {"value": tips or "今日无特别提示"},
         "love_days": {"value": days_count},
-        "second_days": {"value": second_days_count},  # 新增第二个纪念日
+        "second_days": {"value": second_days_count},  # 第二个纪念日
         "birthday_left": {"value": birthday_left},
         "words": {"value": inspiration, "color": get_random_color()}
     }
     
-    # 发送微信消息
-    try:
-        client = WeChatClient(app_id, app_secret)
-        wm = WeChatMessage(client)
-        res = wm.send_template(user_id, template_id, data)
-        print("\n=== 微信发送结果 ===")
-        print(res)
-        print("===================")
-    except Exception as e:
-        print(f"\n!!! 微信消息发送失败: {str(e)}")
+    # 检查必要的微信配置
+    if not app_id or not app_secret or not user_id or not template_id:
+        print("!!! 错误: 微信配置不完整，请检查以下环境变量:")
+        print(f"    APP_ID: {'已设置' if app_id else '未设置'}")
+        print(f"    APP_SECRET: {'已设置' if app_secret else '未设置'}")
+        print(f"    USER_ID: {'已设置' if user_id else '未设置'}")
+        print(f"    TEMPLATE_ID: {'已设置' if template_id else '未设置'}")
+        print("!!! 跳过微信消息发送")
+    else:
+        # 发送微信消息
+        try:
+            print("\n=== 尝试连接微信API ===")
+            client = WeChatClient(app_id, app_secret)
+            
+            # 测试获取access token
+            print("获取access_token...")
+            token = client.access_token
+            print(f"access_token获取成功: {token[:20]}...")
+            
+            wm = WeChatMessage(client)
+            print("开始发送模板消息...")
+            res = wm.send_template(user_id, template_id, data)
+            print("\n=== 微信发送结果 ===")
+            print(res)
+            print("===================")
+        except Exception as e:
+            print(f"\n!!! 微信消息发送失败: {str(e)}")
+            # 提供更详细的错误信息
+            if "40013" in str(e):
+                print("!!! 错误详情: APP_ID 无效，请检查:")
+                print("    1. APP_ID 是否正确")
+                print("    2. APP_ID 和 APP_SECRET 是否匹配")
+                print("    3. IP白名单是否配置正确")
+                print("    4. 微信公众号平台账号是否正常")
 
-# 本地调试输出
+    # 本地调试输出
     print("\n=== 最终发送数据 ===")
     for k, v in data.items():
         print(f"{k}: {v['value']}")
