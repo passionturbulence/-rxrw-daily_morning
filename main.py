@@ -9,7 +9,8 @@ from wechatpy.client.api import WeChatMessage, WeChatTemplate
 
 # 环境变量配置 ==============================================================
 today = datetime.now()
-start_date = os.environ['START_DATE']          # 纪念日，格式：2020-01-01
+start_date = os.environ['START_DATE']          # 第一个纪念日，格式：2020-01-01
+second_date = os.environ['SECOND_DATE']        # 第二个纪念日，格式：2020-01-01
 city = os.environ['CITY']                      # 查询城市，如：北京
 birthday = os.environ['BIRTHDAY']              # 生日，格式：01-01
 
@@ -68,13 +69,23 @@ def get_weather(city):
         return None, None, None, None
 
 def get_days_count():
-    """ 计算纪念日天数 """
+    """ 计算第一个纪念日天数 """
     try:
         start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
         delta = today - start_date_obj
         return delta.days
     except Exception as e:
-        print(f"纪念日计算错误: {str(e)}")
+        print(f"第一个纪念日计算错误: {str(e)}")
+        return "N/A"
+
+def get_second_days_count():
+    """ 计算第二个纪念日天数 """
+    try:
+        second_date_obj = datetime.strptime(second_date, "%Y-%m-%d")
+        delta = today - second_date_obj
+        return delta.days
+    except Exception as e:
+        print(f"第二个纪念日计算错误: {str(e)}")
         return "N/A"
 
 def get_birthday_left():
@@ -107,6 +118,7 @@ if __name__ == "__main__":
     # 获取所有数据
     weather, temp, report_date, tips = get_weather(city)
     days_count = get_days_count()
+    second_days_count = get_second_days_count()  # 新增第二个纪念日
     birthday_left = get_birthday_left()
     inspiration = get_inspiration()
     
@@ -117,6 +129,7 @@ if __name__ == "__main__":
         "temperature": {"value": f"{temp}℃" if temp else "N/A"},
         "tips": {"value": tips or "今日无特别提示"},
         "love_days": {"value": days_count},
+        "second_days": {"value": second_days_count},  # 新增第二个纪念日
         "birthday_left": {"value": birthday_left},
         "words": {"value": inspiration, "color": get_random_color()}
     }
