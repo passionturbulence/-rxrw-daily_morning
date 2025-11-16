@@ -21,82 +21,41 @@ template_id = os.environ["TEMPLATE_ID"]        # 消息模板ID
 # 核心功能函数 ==============================================================
 def get_weather(city):
     """ 获取天气数据 """
-    try:
-        encoded_city = quote(city)
-        url = f"https://apis.tianapi.com/tianqi/index?key=1267e3290f4f9c5610f868069394d955&city={encoded_city}&type=1"
-        
-        response = requests.get(url, timeout=10)
-        res = response.json()
-        
-        # 调试输出
-        print("\n=== 天气API响应 ===")
-        print("请求URL:", url)
-        print("响应数据:", res)
-        print("==================\n")
-
-        if res.get('code') != 200:
-            print(f"API错误：{res.get('msg')}")
-            return None, None, None, None
-            
-        result = res.get('result', {})
-        if not result:
-            print("错误: 天气数据为空")
-            return None, None, None, None
-
-        # 解析数据并转换日期格式
-        weather = result.get('weather', '未知')
-        temp_str = result.get('real', '0℃').replace('℃', '').strip()
-        raw_date = result.get('date', '')
-        
-        # 转换日期格式
-        try:
-            report_date = datetime.strptime(raw_date, "%Y-%m-%d").strftime("%Y年%m月%d日")
-        except:
-            report_date = datetime.now().strftime("%Y年%m月%d日")
-            
-        tips = result.get('tips', '今日无特别提示')
-        
-        try:
-            temperature = round(float(temp_str), 1)
-        except ValueError:
-            temperature = 0.0
-            
-        return weather, temperature, report_date, tips
-        
-    except Exception as e:
-        print(f"天气接口异常: {str(e)}")
-        return None, None, None, None
+    encoded_city = quote(city)
+    url = f"https://apis.tianapi.com/tianqi/index?key=1267e3290f4f9c5610f868069394d955&city={encoded_city}&type=1"
+    
+    response = requests.get(url, timeout=10)
+    res = response.json()
+    
+    result = res['result']
+    weather = result['weather']
+    temp_str = result['real'].replace('℃', '').strip()
+    raw_date = result['date']
+    
+    # 转换日期格式
+    report_date = datetime.strptime(raw_date, "%Y-%m-%d").strftime("%Y年%m月%d日")
+    tips = result['tips']
+    temperature = round(float(temp_str), 1)
+    
+    return weather, temperature, report_date, tips
 
 def get_days_count():
     """ 计算纪念日天数 """
-    try:
-        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
-        delta = today - start_date_obj
-        return delta.days
-    except Exception as e:
-        print(f"纪念日计算错误: {str(e)}")
-        return "N/A"
+    start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
+    delta = today - start_date_obj
+    return delta.days
 
 def get_birthday_left():
     """ 计算生日倒计时 """
-    try:
-        next_birthday = datetime.strptime(f"{datetime.now().year}-{birthday}", "%Y-%m-%d")
-        if next_birthday < today:
-            next_birthday = next_birthday.replace(year=next_birthday.year + 1)
-        return (next_birthday - today).days
-    except Exception as e:
-        print(f"生日计算错误: {str(e)}")
-        return "N/A"
+    next_birthday = datetime.strptime(f"{datetime.now().year}-{birthday}", "%Y-%m-%d")
+    if next_birthday < today:
+        next_birthday = next_birthday.replace(year=next_birthday.year + 1)
+    return (next_birthday - today).days
 
 def get_inspiration():
     """ 获取每日鸡汤 """
-    try:
-        resp = requests.get("https://api.shadiao.pro/chp", timeout=5)
-        if resp.status_code == 200:
-            return resp.json()['data']['text']
-        return "每一天都是新的开始～"
-    except Exception:
-        return "心灵鸡汤正在熬制中..."
+    resp = requests.get("https://api.shadiao.pro/chp", timeout=5)
+    return resp.json()['data']['text']
 
 def get_random_color():
     """ 生成随机颜色 """
@@ -110,29 +69,19 @@ if __name__ == "__main__":
     birthday_left = get_birthday_left()
     inspiration = get_inspiration()
     
-    # 构建消息数据（带容错处理）
+    # 构建消息数据
     data = {
-        "date": {"value": report_date or datetime.now().strftime("%Y年%m月%d日")},
-        "weather": {"value": weather or "未知"},
-        "temperature": {"value": f"{temp}℃" if temp else "N/A"},
-        "tips": {"value": tips or "今日无特别提示"},
+        "date": {"value": report_date},
+        "weather": {"value": weather},
+        "temperature": {"value": f"{temp}℃"},
+        "tips": {"value": tips},
         "love_days": {"value": days_count},
         "birthday_left": {"value": birthday_left},
         "words": {"value": inspiration, "color": get_random_color()}
     }
     
     # 发送微信消息
-    try:
-        client = WeChatClient(app_id, app_secret)
-        wm = WeChatMessage(client)
-        res = wm.send_template(user_id, template_id, data)
-        print("\n=== 微信发送结果 ===")
-        print(res)
-        print("===================")
-    except Exception as e:
-        print(f"\n!!! 微信消息发送失败: {str(e)}")
-
-    # 本地调试输出
-    print("\n=== 最终发送数据 ===")
-    for k, v in data.items():
-        print(f"{k}: {v['value']}")
+    client = WeChatClient(app_id, app_secret)
+    wm = WeChatMessage(client)
+    res = wm.send_template(user_id, template_id, data)
+    print("消息发送成功:", res)
