@@ -132,7 +132,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n!!! 微信消息发送失败: {str(e)}")
 
-    # 本地调试输出
+# 本地调试输出
     print("\n=== 最终发送数据 ===")
     for k, v in data.items():
         print(f"{k}: {v['value']}")
