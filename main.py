@@ -135,3 +135,4 @@ if __name__ == "__main__":
     # 本地调试输出
     print("\n=== 最终发送数据 ===")
     for k, v in data.items():
+        print(f"{k}: {v['value']}")
