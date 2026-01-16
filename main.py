@@ -154,12 +154,14 @@ def get_days_count(date_str, date_name="纪念日"):
         return "N/A"
 
 def get_birthday_left():
-    """ 计算生日倒计时 """
+    """ 计算生日倒计时（结果减一天） """
     try:
         next_birthday = datetime.strptime(f"{datetime.now().year}-{birthday}", "%Y-%m-%d")
         if next_birthday < today:
             next_birthday = next_birthday.replace(year=next_birthday.year + 1)
-        return (next_birthday - today).days
+        days_left = (next_birthday - today).days
+        # 在原有计算结果上减去一天
+        return max(0, days_left - 1)  # 确保不会出现负数
     except Exception as e:
         print(f"生日计算错误: {str(e)}")
         return "N/A"
@@ -184,7 +186,7 @@ if __name__ == "__main__":
     weather, temp, report_date, tips = get_weather(city)
     days_count = get_days_count(start_date, "第一个纪念日")
     second_days_count = get_days_count(second_date, "第二个纪念日")
-    birthday_left = get_birthday_left()
+    birthday_left = get_birthday_left()  # 这里已经减了一天
     inspiration = get_inspiration()
     
     # 构建消息数据（带容错处理）
