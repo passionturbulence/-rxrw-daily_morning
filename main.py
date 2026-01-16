@@ -180,8 +180,8 @@ def get_random_color():
 if __name__ == "__main__":
     # 获取所有数据
     weather, temp, report_date, tips = get_weather(city)
-    days_count = get_days_count-1(start_date, "第一个纪念日")
-    second_days_count = get_days_count-1(second_date, "第二个纪念日")
+    days_count = get_days_count(start_date, "第一个纪念日")
+    second_days_count = get_days_count(second_date, "第二个纪念日")
     birthday_left = get_birthday_left()
     inspiration = get_inspiration()
     
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         "weather": {"value": weather or "未知"},
         "temperature": {"value": f"{temp}℃" if temp else "N/A"},
         "tips": {"value": tips or "今日无特别提示"},
-        "love_days": {"value": days_count},
+        "love_days": {"value": days_count}-1,
         "second_days": {"value": second_days_count},  # 第二个纪念日
         "birthday_left": {"value": birthday_left},
         "words": {"value": inspiration, "color": get_random_color()}
