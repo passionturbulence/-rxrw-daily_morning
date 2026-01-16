@@ -92,6 +92,7 @@ if second_date == '2022-01-01':
     print("    3. 环境变量设置后没有重启应用")
 else:
     print(f"✓ SECOND_DATE 使用的是您设置的值: {second_date}")
+
 # 核心功能函数 ==============================================================
 def get_weather(city):
     """ 获取天气数据 """
@@ -142,11 +143,12 @@ def get_weather(city):
         return None, None, None, None
 
 def get_days_count(date_str, date_name="纪念日"):
-    """ 计算纪念日天数 """
+    """ 计算纪念日天数（结果减一天） """
     try:
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
         delta = today - date_obj
-        return delta.days
+        # 在原有计算结果上减去一天
+        return max(0, delta.days - 1)  # 确保不会出现负数
     except Exception as e:
         print(f"{date_name}计算错误: {str(e)}")
         return "N/A"
