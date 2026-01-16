@@ -55,6 +55,9 @@ template_id = os.environ["TEMPLATE_ID"]
 
 print("="*60 + "\n")
 
+# 环境变量配置 ==============================================================
+today = datetime.now()
+
 # 安全获取环境变量，提供默认值
 start_date = os.environ.get('START_DATE', '2020-01-01')          # 第一个纪念日
 second_date = os.environ.get('SECOND_DATE', '2022-01-01')        # 第二个纪念日，如果未设置则使用默认值
@@ -68,6 +71,7 @@ template_id = os.environ.get("TEMPLATE_ID", "")                  # 消息模板I
 
 # 详细的调试信息输出
 print("\n=== 环境变量详细检查 ===")
+print(f"所有环境变量: {dict(os.environ)}")  # 打印所有环境变量
 print("\n关键环境变量:")
 print(f"START_DATE: {start_date} (类型: {type(start_date)})")
 print(f"SECOND_DATE: {second_date} (类型: {type(second_date)})")
@@ -88,7 +92,6 @@ if second_date == '2022-01-01':
     print("    3. 环境变量设置后没有重启应用")
 else:
     print(f"✓ SECOND_DATE 使用的是您设置的值: {second_date}")
-
 # 核心功能函数 ==============================================================
 def get_weather(city):
     """ 获取天气数据 """
@@ -139,68 +142,22 @@ def get_weather(city):
         return None, None, None, None
 
 def get_days_count(date_str, date_name="纪念日"):
-    """ 计算纪念日天数（修正版：不包含今天）"""
+    """ 计算纪念日天数 """
     try:
-        # 将纪念日转换为日期对象，时间设为0点
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d").replace(hour=0, minute=0, second=0, microsecond=0)
-        # 今天也设为0点，方便精确计算
-        today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        delta = today_midnight - date_obj
-        
-        # 调试信息
-        print(f"\n=== {date_name}调试信息 ===")
-        print(f"纪念日: {date_obj.date()}")
-        print(f"今天: {today_midnight.date()}")
-        print(f"原始天数差: {delta.days}天")
-        
-        # 修正：返回实际经过的天数（不包含今天）
-        # 如果纪念日是今天，结果为0
-        # 如果纪念日是昨天，结果为1
-        result = delta.days if delta.days >= 0 else 0
-        print(f"修正后天数（不包含今天）: {result}天")
-        print("======================\n")
-        
-        return result
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        delta = today - date_obj
+        return delta.days
     except Exception as e:
         print(f"{date_name}计算错误: {str(e)}")
         return "N/A"
 
 def get_birthday_left():
-    """ 计算生日倒计时（修正版：不包含今天）"""
+    """ 计算生日倒计时 """
     try:
-        # 获取当前年份的生日
-        current_year = datetime.now().year
-        next_birthday = datetime.strptime(f"{current_year}-{birthday}", "%Y-%m-%d").replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        
-        # 今天设为0点
-        today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        # 如果今年的生日已经过了，计算明年的生日
-        if next_birthday < today_midnight:
-            next_birthday = datetime.strptime(f"{current_year + 1}-{birthday}", "%Y-%m-%d").replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
-        
-        # 计算天数差
-        delta = next_birthday - today_midnight
-        days_left = delta.days
-        
-        # 调试信息
-        print("\n=== 生日倒计时调试信息 ===")
-        print(f"今天: {today_midnight.date()}")
-        print(f"下一个生日: {next_birthday.date()}")
-        print(f"原始天数差: {days_left}天")
-        
-        # 修正：如果生日就是今天，倒计时为0
-        # 如果生日是明天，倒计时为1
-        # 这样更符合"还有多少天"的直观理解
-        print(f"生日倒计时: {days_left}天")
-        print("========================\n")
-        
-        return days_left
+        next_birthday = datetime.strptime(f"{datetime.now().year}-{birthday}", "%Y-%m-%d")
+        if next_birthday < today:
+            next_birthday = next_birthday.replace(year=next_birthday.year + 1)
+        return (next_birthday - today).days
     except Exception as e:
         print(f"生日计算错误: {str(e)}")
         return "N/A"
@@ -276,9 +233,6 @@ if __name__ == "__main__":
                 print("    4. 微信公众号平台账号是否正常")
 
     # 本地调试输出
-    print("\n" + "="*60)
-    print("最终发送数据")
-    print("="*60)
+    print("\n=== 最终发送数据 ===")
     for k, v in data.items():
         print(f"{k}: {v['value']}")
-    print("="*60)
