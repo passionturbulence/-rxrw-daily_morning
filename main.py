@@ -55,9 +55,6 @@ template_id = os.environ["TEMPLATE_ID"]
 
 print("="*60 + "\n")
 
-# 环境变量配置 ==============================================================
-today = datetime.now()
-
 # 安全获取环境变量，提供默认值
 start_date = os.environ.get('START_DATE', '2020-01-01')          # 第一个纪念日
 second_date = os.environ.get('SECOND_DATE', '2022-01-01')        # 第二个纪念日，如果未设置则使用默认值
@@ -92,6 +89,7 @@ if second_date == '2022-01-01':
     print("    3. 环境变量设置后没有重启应用")
 else:
     print(f"✓ SECOND_DATE 使用的是您设置的值: {second_date}")
+
 # 核心功能函数 ==============================================================
 def get_weather(city):
     """ 获取天气数据 """
@@ -142,11 +140,25 @@ def get_weather(city):
         return None, None, None, None
 
 def get_days_count(date_str, date_name="纪念日"):
-    """ 计算纪念日天数 """
+    """ 计算纪念日天数（修正版：不包含今天）"""
     try:
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
         delta = today - date_obj
-        return delta.days
+        
+        # 调试信息
+        print(f"\n=== {date_name}调试信息 ===")
+        print(f"纪念日: {date_obj.date()}")
+        print(f"今天: {today.date()}")
+        print(f"原始天数差: {delta.days}天")
+        
+        # 修正：返回实际经过的天数（不包含今天）
+        # 如果纪念日是今天，结果为0
+        # 如果纪念日是昨天，结果为1
+        result = delta.days - 1 if delta.days > 0 else 0
+        print(f"修正后天数（不包含今天）: {result}天")
+        print("======================\n")
+        
+        return result
     except Exception as e:
         print(f"{date_name}计算错误: {str(e)}")
         return "N/A"
@@ -191,7 +203,7 @@ if __name__ == "__main__":
         "weather": {"value": weather or "未知"},
         "temperature": {"value": f"{temp}℃" if temp else "N/A"},
         "tips": {"value": tips or "今日无特别提示"},
-        "love_days": {"value": days_count}-1,
+        "love_days": {"value": days_count},
         "second_days": {"value": second_days_count},  # 第二个纪念日
         "birthday_left": {"value": birthday_left},
         "words": {"value": inspiration, "color": get_random_color()}
