@@ -11,7 +11,7 @@ today = datetime.now()
 
 # ===================== 环境变量 =====================
 start_date = os.environ.get('START_DATE', '')
-second_date = os.environ.get('SECOND_DATE', '')
+second_date = "2025-08-29"  # 👈 只改这里，固定为你要的日期
 city = os.environ.get('CITY', '')
 app_id = os.environ.get("APP_ID", "")
 app_secret = os.environ.get("APP_SECRET", "")
@@ -22,7 +22,6 @@ template_id = os.environ.get("TEMPLATE_ID", "")
 print("🔍 检查环境变量...")
 required = [
     ("START_DATE", start_date),
-    ("SECOND_DATE", second_date),
     ("CITY", city),
     ("APP_ID", app_id),
     ("APP_SECRET", app_secret),
@@ -125,7 +124,7 @@ if __name__ == "__main__":
     }
 
     # ==============================================
-    # 👇👇👇 这里就是你要的：输出所有发送内容
+    # 输出发送内容
     # ==============================================
     print("\n" + "="*50)
     print("📱 即将发送到微信的内容如下：")
