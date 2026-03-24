@@ -5,7 +5,7 @@ import requests
 from urllib.parse import quote
 from wechatpy import WeChatClient
 from wechatpy.client.api import WeChatMessage
-from zhdate import ZhDate  # 新增：农历转换库
+from zhdate import ZhDate
 
 # ===================== 时间 =====================
 today = datetime.now()
@@ -14,7 +14,6 @@ today = datetime.now()
 start_date = os.environ.get('START_DATE', '')
 second_date = os.environ.get('SECOND_DATE', '')
 city = os.environ.get('CITY', '')
-# 这里填你的阳历生日，程序会自动转农历
 birthday_solar = os.environ.get('BIRTHDAY_SOLAR', '2007-02-03')
 
 app_id = os.environ.get("APP_ID", "")
@@ -76,52 +75,39 @@ def get_days(date_str):
     except:
         return 0
 
-# ===================== 🔥 核心：按农历生日计算倒计时 =====================
+# ===================== 🔥 农历生日倒计时 =====================
 def get_lunar_birthday_remaining(solar_birth_str):
-    """
-    输入：阳历生日字符串（如 2007-02-03）
-    输出：距离下一个农历生日的天数（已减1，当天显示0）
-    """
     try:
-        # 1. 把阳历生日转成农历
         solar_birth = datetime.strptime(solar_birth_str, "%Y-%m-%d")
         lunar_birth = ZhDate.from_datetime(solar_birth)
-        lunar_month = lunar_birth.month  # 12
-        lunar_day = lunar_birth.day      # 16
-        print(f"📅 你的农历生日：{lunar_month}月{lunar_day}日")
+        lunar_month = lunar_birth.month
+        lunar_day = lunar_birth.day
 
-        # 2. 计算今年农历生日对应的阳历日期
         this_year = today.year
         lunar_this = ZhDate(this_year, lunar_month, lunar_day)
         solar_this = lunar_this.to_datetime()
 
-        # 3. 如果今年生日已过，算明年
         if solar_this < today:
             lunar_next = ZhDate(this_year + 1, lunar_month, lunar_day)
             solar_next = lunar_next.to_datetime()
         else:
             solar_next = solar_this
 
-        # 4. 计算天数并减1（当天显示0）
         days_left = (solar_next - today).days
         return max(0, days_left - 1)
-
     except Exception as e:
-        print(f"农历生日计算错误：{e}")
+        print(f"生日计算错误：{e}")
         return 0
 
 # ===================== 主逻辑 =====================
 if __name__ == "__main__":
     print("\n🚀 开始推送微信消息...")
-    
+
     weather, temp, date_str, tips = get_weather(city)
     love_days = get_days(start_date)
     second_days = get_days(second_date)
-    
-    # 🔥 按农历生日计算倒计时
     birth_left = get_lunar_birthday_remaining(birthday_solar)
-    
-    # 随机鸡汤
+
     def get_words():
         try:
             r = requests.get("https://api.shadiao.pro/chp", timeout=3)
