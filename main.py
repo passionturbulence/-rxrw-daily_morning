@@ -45,11 +45,9 @@ if not all_ok:
 # ===================== 固定农历生日：腊月十六 =====================
 def get_lunar_birthday_12_16():
     try:
-        # 你的生日：农历 12月16日（腊月十六）
         lunar_month = 12
         lunar_day = 16
 
-        # 手动对应每年阳历（最稳定，不依赖库）
         year = today.year
         if year == 2025:
             next_birth = datetime(2026, 1, 25)
@@ -112,7 +110,7 @@ if __name__ == "__main__":
     weather, temp, date_str, tips = get_weather(city)
     love_days = get_days(start_date)
     second_days = get_days(second_date)
-    birth_left = get_lunar_birthday_12_16()  # 农历腊月十六
+    birth_left = get_lunar_birthday_12_16()
     words = get_words()
 
     data = {
@@ -126,6 +124,23 @@ if __name__ == "__main__":
         "words": {"value": words, "color": "#ff69b4"}
     }
 
+    # ==============================================
+    # 👇👇👇 这里就是你要的：输出所有发送内容
+    # ==============================================
+    print("\n" + "="*50)
+    print("📱 即将发送到微信的内容如下：")
+    print("="*50)
+    print(f"📅 日期：{data['date']['value']}")
+    print(f"☁️ 天气：{data['weather']['value']}")
+    print(f"🌡 温度：{data['temperature']['value']}")
+    print(f"💡 提示：{data['tips']['value']}")
+    print(f"💑 相恋天数：{data['love_days']['value']} 天")
+    print(f"🎯 第二个纪念日：{data['second_days']['value']} 天")
+    print(f"🎂 下一个农历生日（腊月十六）还有：{data['birthday_left']['value']} 天")
+    print(f"💌 每日一句：{data['words']['value']}")
+    print("="*50 + "\n")
+
+    # 发送微信
     try:
         client = WeChatClient(app_id, app_secret)
         wm = WeChatMessage(client)
