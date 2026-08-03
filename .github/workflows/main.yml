@@ -31,3 +31,5 @@ jobs:
       SECOND_DATE: ${{ secrets.SECOND_DATE }}
       BIRTHDAY: ${{ secrets.BIRTHDAY }}
       CITY: ${{ secrets.CITY }}
+      QWEATHER_API_KEY: ${{ secrets.QWEATHER_API_KEY }}
+      QWEATHER_API_HOST: ${{ secrets.QWEATHER_API_HOST }}
