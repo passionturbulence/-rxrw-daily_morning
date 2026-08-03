@@ -33,3 +33,4 @@ jobs:
       CITY: ${{ secrets.CITY }}
       QWEATHER_API_KEY: ${{ secrets.QWEATHER_API_KEY }}
       QWEATHER_API_HOST: ${{ secrets.QWEATHER_API_HOST }}
+      TIANAPI_KEY: ${{ secrets.TIANAPI_KEY }}

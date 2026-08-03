@@ -18,6 +18,7 @@ user_id = os.environ.get("USER_ID", "")
 template_id = os.environ.get("TEMPLATE_ID", "")
 qweather_api_key = os.environ.get("QWEATHER_API_KEY", "")
 qweather_api_host = os.environ.get("QWEATHER_API_HOST", "").strip().rstrip("/")
+tianapi_key = os.environ.get("TIANAPI_KEY", "")
 
 
 def check_environment():
@@ -31,6 +32,7 @@ def check_environment():
         ("TEMPLATE_ID", template_id),
         ("QWEATHER_API_KEY", qweather_api_key),
         ("QWEATHER_API_HOST", qweather_api_host),
+        ("TIANAPI_KEY", tianapi_key),
     ]
 
     missing = []
@@ -122,22 +124,20 @@ def get_days(date_text):
 
 
 def get_words():
-    fallback = "平安喜乐，万事胜意"
+    response = requests.get(
+        "https://apis.tianapi.com/saylove/index",
+        params={"key": tianapi_key},
+        timeout=10,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    if payload.get("code") != 200:
+        raise ValueError(payload.get("msg", "天行情话接口返回错误"))
 
-    try:
-        response = requests.get(
-            "https://v1.hitokoto.cn/",
-            params={"encode": "json", "max_length": 30},
-            timeout=10,
-        )
-        response.raise_for_status()
-        words = response.json().get("hitokoto", fallback).strip()
-        if not words:
-            return fallback
-        return words if len(words) <= 30 else words[:29] + "…"
-    except (requests.RequestException, KeyError, TypeError, ValueError) as exc:
-        print(f"⚠️ 每日一句获取失败：{exc}")
-        return fallback
+    words = payload.get("result", {}).get("content", "").strip()
+    if not words:
+        raise ValueError("天行情话接口返回了空内容")
+    return words
 
 
 def main():
