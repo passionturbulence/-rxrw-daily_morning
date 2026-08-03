@@ -16,6 +16,8 @@ app_id = os.environ.get("APP_ID", "")
 app_secret = os.environ.get("APP_SECRET", "")
 user_id = os.environ.get("USER_ID", "")
 template_id = os.environ.get("TEMPLATE_ID", "")
+qweather_api_key = os.environ.get("QWEATHER_API_KEY", "")
+qweather_api_host = os.environ.get("QWEATHER_API_HOST", "").strip().rstrip("/")
 
 
 def check_environment():
@@ -27,6 +29,8 @@ def check_environment():
         ("APP_SECRET", app_secret),
         ("USER_ID", user_id),
         ("TEMPLATE_ID", template_id),
+        ("QWEATHER_API_KEY", qweather_api_key),
+        ("QWEATHER_API_HOST", qweather_api_host),
     ]
 
     missing = []
@@ -57,71 +61,50 @@ def get_lunar_birthday_12_16():
     return max(0, (next_birthday - today).days)
 
 
-WEATHER_NAMES = {
-    0: "晴",
-    1: "大部晴朗",
-    2: "多云",
-    3: "阴",
-    45: "雾",
-    48: "雾凇",
-    51: "小毛毛雨",
-    53: "毛毛雨",
-    55: "较强毛毛雨",
-    61: "小雨",
-    63: "中雨",
-    65: "大雨",
-    71: "小雪",
-    73: "中雪",
-    75: "大雪",
-    80: "小阵雨",
-    81: "阵雨",
-    82: "强阵雨",
-    95: "雷雨",
-    96: "雷雨伴冰雹",
-    99: "强雷雨伴冰雹",
-}
+def qweather_get(path, params):
+    response = requests.get(
+        f"https://{qweather_api_host}{path}",
+        headers={"X-QW-Api-Key": qweather_api_key},
+        params=params,
+        timeout=15,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    if payload.get("code") != "200":
+        raise ValueError(f"和风天气返回错误码：{payload.get('code')}")
+    return payload
 
 
 def get_weather(city_name):
     date_text = datetime.now().strftime("%Y年%m月%d日")
 
     try:
-        geo_response = requests.get(
-            "https://geocoding-api.open-meteo.com/v1/search",
-            params={
-                "name": city_name,
-                "count": 1,
-                "language": "zh",
-                "format": "json",
-            },
-            timeout=15,
+        city_payload = qweather_get(
+            "/geo/v2/city/lookup",
+            {"location": city_name, "range": "cn", "number": 1, "lang": "zh"},
         )
-        geo_response.raise_for_status()
-        locations = geo_response.json().get("results", [])
+        locations = city_payload.get("location", [])
         if not locations:
             raise ValueError(f"找不到城市：{city_name}")
+        location_id = locations[0]["id"]
 
-        latitude = locations[0]["latitude"]
-        longitude = locations[0]["longitude"]
+        now = qweather_get(
+            "/v7/weather/now", {"location": location_id, "lang": "zh"}
+        )["now"]
+        indices = qweather_get(
+            "/v7/indices/1d",
+            {"type": "3", "location": location_id, "lang": "zh"},
+        ).get("daily", [])
 
-        weather_response = requests.get(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude": latitude,
-                "longitude": longitude,
-                "current": "temperature_2m,apparent_temperature,weather_code",
-                "timezone": "Asia/Shanghai",
-            },
-            timeout=15,
-        )
-        weather_response.raise_for_status()
-        current = weather_response.json()["current"]
-
-        weather_code = int(current["weather_code"])
-        weather = WEATHER_NAMES.get(weather_code, "未知")
-        temperature = str(round(float(current["temperature_2m"])))
-        apparent_temperature = round(float(current["apparent_temperature"]))
-        tips = f"体感温度 {apparent_temperature}℃，记得根据天气增减衣物"
+        weather = now.get("text", "未知")
+        temperature = now.get("temp", "20")
+        feels_like = now.get("feelsLike", temperature)
+        tips = indices[0].get("text", "") if indices else ""
+        if not tips:
+            tips = f"体感温度 {feels_like}℃，记得根据天气增减衣物"
+        tips = tips.strip()
+        if len(tips) > 60:
+            tips = tips[:59] + "…"
 
         return weather, temperature, date_text, tips
     except (requests.RequestException, KeyError, TypeError, ValueError) as exc:
